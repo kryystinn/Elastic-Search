@@ -1,86 +1,74 @@
-# Imprimir sin saltos de linea y utilizar la funcion print
+###############################imports##########################################
 from __future__ import print_function
-import sys # Para usar exit
-import pprint # Para utilizar PrettyPrinter
-import json # Para trabajar con objetos JSON
-import requests
-
 from elasticsearch import Elasticsearch
+import json
+from SPARQLWrapper import SPARQLWrapper, JSON
+###############################imports##########################################
 
-pprint = pprint.PrettyPrinter(indent=2)
+def ejercicio3():
 
-def main():
-    # Conexion por defecto a localhost:9200
+    #instancia de elasticsearch
     es = Elasticsearch()
+    #url de wikidata para la consulta de datos
+    url = "https://query.wikidata.org/sparql"
 
-    # En ocasiones las consultas tienen que formalizarse en JSON
-    results = es.search(
-        index="reddit-mentalhealth",
-            body = {
-                "size": 0,
-                "query": {
-                    "bool": {
-                        "should": [
-                            {
-                                "match_phrase": {
-                                    "selftext": "I was taking"
-                                }
-                            },
-                            {
-                                "multi_match": {
-                                    "query": "mg",
-                                    "fields": ["selftext", "title"]
-                                }
-                            },
-                            {
-                                "match_phrase": {
-                                    "selftext": "I was on"
-                                }
-                            },
-                            {
-                                "match": {
-                                    "selftext": "dose"
-                                }
-                            },
-                            {
-                                "match": {
-                                    "selftext": "prescribed"
-                                }
-                            }
-                        ]
-                    }
-                },
-                "aggs": {
-                    "posibles medicamentos": {
-                        "significant_terms": {
-                            "field": "title",
-                            "gnd": {}
-                        }
-                    }
-                }
+    #consulta que contrastamos con wikidata
+    consulta ="""SELECT DISTINCT ?itemLabel
+    WHERE {
+        ?item rdfs:label ?nombre.?item wdt:P31 ?tipo.VALUES ?tipo {wd:Q28885102 wd:Q12140}
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+    }"""
+
+    #ejecutamos la consulta
+    aux = SPARQLWrapper(url)
+    aux.setQuery(consulta)
+    aux.setReturnFormat(JSON)
+    json=  aux.query().convert()["results"]["bindings"]
+
+    #parseamos los valores obtenidos en una lista
+    lista_meds = []
+    for e in json:
+        for value in e.values():
+            lista_meds.append(value['value'])
+
+    #lanzamos la busqueda en elasticsearch
+    data = es.search(index="reddit-mentalhealth",
+    body = {
+        "size": 0,
+        "query": {
+            "query_string": {
+                "query": "using OR prescribed OR dose OR mg -water",
+                "allow_leading_wildcard": "true"
             }
-    )
-
-    for bucket in results['aggregations']['posibles medicamentos']['buckets']:
-        medicamento = bucket['key']
-        if (es_medicamento(medicamento)):
-            print(medicamento)
-
-def es_medicamento(candidato):
-
-    url = 'https://query.wikidata.org/sparql'
-    query = """
-            SELECT ?item WHERE {
-              ?item rdfs:label ?nombre.
-              ?item wdt:P31 ?tipo.
-              VALUES ?tipo {wd:Q28885102 wd:Q12140}
-              FILTER(LCASE(?nombre) = "%s"@en)
+        },
+          "aggs": {
+            "Title": {
+              "significant_terms": {
+                "field": "title",
+                "size": 1000,
+				"gnd":{}
+              }
+            },
+            "Text": {
+              "significant_terms": {
+                "field": "selftext",
+                "size": 1000,
+				"gnd":{}
+              }
             }
-            """ % (candidato)
-    r = requests.get(url, params = {'format': 'json', 'query': query})
-    data = r.json()
+          }
+    })
 
-    return len(data['results']['bindings']) > 0
+    #parseamos los datos obtenidos
+    meds = []
+    for j in ["Text", "Title"]:
+        for i in data["aggregations"][j]["buckets"]:
+            if (i["key"] not in meds and i["key"] in lista_meds):
+                meds.append(i["key"])
 
-if __name__ == '__main__':
-    main()
+    #imprimimos por pantalla el resultado
+    print("--- Resultado ---")
+    for med in meds:
+        print("\t",med)
+
+ejercicio3()
