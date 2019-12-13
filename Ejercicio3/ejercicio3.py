@@ -1,19 +1,16 @@
 # Imprimir sin saltos de linea y utilizar la funcion print
 from __future__ import print_function
-
-import json # Para poder trabajar con objetos JSON
-import pprint # Para poder hacer uso de PrettyPrinter
-import sys # Para poder usar exit
+import sys # Para usar exit
+import pprint # Para utilizar PrettyPrinter
+import json # Para trabajar con objetos JSON
 import requests
 
 from elasticsearch import Elasticsearch
 
-# Queremos imprimir bonito
-pp = pprint.PrettyPrinter(indent=2)
+pprint = pprint.PrettyPrinter(indent=2)
 
 def main():
-
-    # Nos conectamos por defecto a localhost:9200
+    # Conexion por defecto a localhost:9200
     es = Elasticsearch()
 
     # En ocasiones las consultas tienen que formalizarse en JSON
@@ -50,8 +47,6 @@ def main():
                                     "selftext": "prescribed"
                                 }
                             }
-
-
                         ]
                     }
                 },
@@ -64,8 +59,6 @@ def main():
                     }
                 }
             }
-
-
     )
 
     for bucket in results['aggregations']['posibles medicamentos']['buckets']:
