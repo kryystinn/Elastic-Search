@@ -5,7 +5,7 @@ from elasticsearch import Elasticsearch
 ###############################################################################
 
 #funcion que nos permite cargar un fichero de palabras vacias para ignorarlas
-#en a bsqueda
+#en a búsqueda
 def loadStop():
     result=open('./stop.txt','r').read().splitlines()
     file.close

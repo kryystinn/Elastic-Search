@@ -1,3 +1,4 @@
+# coding=utf-8
 ################################imports########################################
 import json # Para poder trabajar con objetos JSON
 from elasticsearch import helpers as help
@@ -76,7 +77,7 @@ def main10terms():
     #definicion de una variable que usaremos para las herramientas de elastic
     elasticS = Elasticsearch()
     #cargamos en una variable auxiliar las palabras que deseamos ignorar
-    stopW = loadStopWords()
+    stopW = loadStop()
     aux = elasticS.search(index="reddit-mentalhealth",
         body = {
                   "size": 0,
