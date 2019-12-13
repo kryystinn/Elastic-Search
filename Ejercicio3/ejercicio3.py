@@ -1,4 +1,4 @@
-# Para poder usar la función print e imprimir sin saltos de línea
+# Imprimir sin saltos de linea y utilizar la funcion print
 from __future__ import print_function
 
 import json # Para poder trabajar con objetos JSON
