@@ -57,7 +57,7 @@ def ejercicio4_suicide():
 
     comorbido=[]
     for i in result:
-        if(isComorbid(i, "selfharm")):
+        if(isComorbid(i, "selfharm.json")):
             comorbido.append(i)
 
     print("--- Found Comorbids ---")
@@ -137,12 +137,13 @@ def ejercicio4_selfharm():
 
     result=[]
     for i in results["aggregations"]["texto"]["buckets"]:
-        if(i["key"] not in stopwords):
+        if(i["key"] not in stopW):
             result.append(str(i["key"].encode("utf8")))
 
+    comorbido=[];
     for i in result:
-        if(isComorbid(i, "selfharm")):
-            comorbido.append(i).encode("utf8")
+        if(isComorbid(i, "selfharm.json")):
+            comorbido.append(i);
 
     print("--- Found Comorbids ---")
     for word in comorbido:
