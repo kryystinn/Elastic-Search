@@ -1,5 +1,4 @@
 ###############################imports##########################################
-from __future__ import print_function
 from elasticsearch import Elasticsearch
 import json
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -69,6 +68,6 @@ def ejercicio3():
     #imprimimos por pantalla el resultado
     print("--- Resultado ---")
     for med in meds:
-        print("\t",med)
+        print(med)
 
 ejercicio3()
