@@ -1,5 +1,6 @@
 ﻿# coding=utf-8
 ################################imports########################################
+import codecs
 import json
 from elasticsearch import Elasticsearch
 ###############################################################################
@@ -19,6 +20,7 @@ def ejercicio4_suicide():
     stopW = loadStop(); #se carga el fichero StopWords
     result = []; #lista de palabras resultantes
     comorbido = []; #lista de palabras comórbidas
+    titulos = esFactorComorbido("suicide.json"); #obtenemos los títulos del json de artículos relacionados con suicidio de Google Scholar
     results = es.search(
         index="reddit-mentalhealth",
         body = {
@@ -33,7 +35,7 @@ def ejercicio4_suicide():
             "texto": {
               "significant_terms": {
                 "field": "selftext",
-                "size": 350,
+                "size": 1000,
                 "gnd": {}
               }
             }
@@ -46,19 +48,25 @@ def ejercicio4_suicide():
                 result.append(str(i["key"].encode("utf8")));
 
     for j in result:
-        if(esFactorComorbido(j, "suicideGS.json")):
-            comorbido.append(j)
+        for k in titulos:
+            if j in k:
+                comorbido.append(j);
 
     print("--- Found Comorbids ---")
-    for word in comorbido:
+    for word in list(set(comorbido)):
         print(word);
 
 
-def esFactorComorbido(palabra , archivo):
+def esFactorComorbido(archivo):
     with open(archivo,"r") as aux:
-        info = json.load(aux)
-        if palabra.decode("utf8") in info:
-            return True
-        return False
+        info = aux.read(3)
+        if info != codecs.BOM_UTF8:
+            aux.seek(0)
+        data = json.load(aux);
+
+        titles = []
+        for e in data:
+            titles.append(e['title'].encode("utf8"))
+        return titles;
 
 ejercicio4_suicide();
